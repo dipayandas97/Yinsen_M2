@@ -188,12 +188,12 @@ class JARVIS:
                 
                 # Process text input if available
                 if text_input:
-                    _ = self._handle_user_input(text_input)
+                    _ = self._handle_user_input(text_input, response_format='HTML')
                 
                 # Process voice input if available
                 if voice_input:
                     self.text_output.display(f"You said: {voice_input}")
-                    self._handle_user_input(voice_input)
+                    _ = self._handle_user_input(voice_input, response_format='TEXT')
                     
             except KeyboardInterrupt:
                 self.text_output.display("Received shutdown signal. Shutting down")
@@ -203,7 +203,10 @@ class JARVIS:
             except Exception as e:
                 self.logger.error(f"Error in main loop: {e}")
                 
-    def _handle_user_input(self, user_input: str):
+    def _handle_user_input(self, 
+                           user_input: str, 
+                           response_format: str = 'TEXT' # 'TEXT' or 'HTML'
+                           ):
         """Handle user input from any source"""
         # Process shutdown commands
         if any(keyword in user_input.lower() for keyword in ['exit', 'quit', 'shutdown']):
@@ -212,30 +215,30 @@ class JARVIS:
             return
             
         # Get response from MAS system -------------------------------------------------------------
-        response = self.get_response_from_MAS_system(user_input)
+        response = self.get_response_from_MAS_system(user_input, response_format=response_format)
+        
         #print(f"\nDEBUG: Raw raw response from main LLM agentaw_r: {raw_response}")
 
         # Display the response to the user -------------------------------------------------------------
-        if response:
-            display_msg = f"{self.current_agent.agent_name}: {response}"
+        if response['final_response_to_user']:
+            display_msg = f"{self.current_agent.agent_name}: {response['final_response_to_user']}"
             #print(f"DEBUG: Display message: {display_msg}")
             self.text_output.display(display_msg)
             
             # Speak the response if audio output is enabled
             if self.audio_output:
-                self.audio_output.speak(response)
+                self.audio_output.speak(response['final_response_to_user'])
         
         # return reponse to frontend/api
-        return response
+        return response['final_response_to_user'] # only return response to frontend/api when current agent is also needed
 
-
-    def get_response_from_MAS_system(self, user_input: str) -> Dict[str, Any]:
+    def get_response_from_MAS_system(self, user_input: str, response_format: str) -> Dict[str, Any]:
         """Process user input and return response dictionary"""
         try:
             # Get reponse from MAS model 1
-            response_dict = self.mas.get_response_from_mas_system(user_input, self.current_agent)
+            response_dict = self.mas.get_response_from_mas_system(user_input, self.current_agent, response_format=response_format)
             self.current_agent = response_dict["current_agent"]
-            return response_dict["final_response_to_user"]
+            return response_dict
             
         except Exception as e:
             self.logger.error(f"Error processing input: {e}")            

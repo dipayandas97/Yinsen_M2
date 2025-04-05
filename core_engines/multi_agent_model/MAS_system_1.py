@@ -107,7 +107,7 @@ class MAS_system_1(object):
         '''
         Get the current agent.
         '''
-        return self.current_agent
+        return self.current_agent    
     
     def _switch_agent(self, agent_name: str):
         """Switch to a different agent"""
@@ -157,9 +157,11 @@ class MAS_system_1(object):
         else:
             self.logger.warning(f"Unknown agent name: {agent_name}, staying with current agent")
             return False
+    
     def get_response_from_mas_system(self,
                                     user_input: str,
                                     main_llm_agent: LLMAgent,
+                                    response_format: str
                                     ) -> Dict[str, Any]:
         '''
         Get the response from the MAS model 1.
@@ -238,6 +240,12 @@ class MAS_system_1(object):
                                       [tool_instruction_from_tool_agent]: {str(tool_response_dict)}\n \
                                       [tool_execution_result]: {str(tool_execution_result)}'
         
+
+        # 4. add response format to the overall response dict
+        overall_response_dict = overall_response_dict + f"\n [response_format]: {response_format}"
+
+        print(f"DEBUG: Overall response dict: {overall_response_dict}")
+
         visualizer_response = self.visualizer_agent.generate_response(overall_response_dict)
         visualizer_response_dict = convert_string_to_dict(visualizer_response)
         

@@ -30,6 +30,6 @@ class TextInput(BaseModel):
 
 @app.post("/process-text")
 def process_text(input_data: TextInput):
-    output = jarvis._handle_user_input(input_data.text)
+    output = jarvis._handle_user_input(input_data.text, response_format='HTML')
     # processed_text = input_data.text.upper()  # Example: Convert to uppercase
     return {"output": output}
