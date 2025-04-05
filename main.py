@@ -1,5 +1,6 @@
 import sys
 import os
+
 # Add the project root directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 #print(os.getcwd())
@@ -225,6 +226,7 @@ class JARVIS:
                 self.audio_output.speak(response)
         
         # return reponse to frontend/api
+        return response
 
 
     def get_response_from_MAS_system(self, user_input: str) -> Dict[str, Any]:
