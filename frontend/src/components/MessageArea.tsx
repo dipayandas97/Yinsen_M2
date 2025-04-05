@@ -75,7 +75,7 @@ const MessageArea = ({ messages }: MessageAreaProps) => {
     }
   }, [messages, speak, cancel, speaking, spokenMessageIds]);
 
-  // Show all messages instead of just the latest one
+  // Show only the latest system response without the user's query
   return (
     <ScrollArea className="flex-grow">
       <div className="flex-grow p-4 overflow-y-auto bg-white dark:bg-gray-900 min-h-full">
@@ -89,34 +89,29 @@ const MessageArea = ({ messages }: MessageAreaProps) => {
           </div>
         ) : (
           <div className="space-y-4 animate-fade-in">
-            {messages.map((message, index) => (
-              <div key={index} className="flex items-start gap-3">
-                {message.isUser ? (
-                  <>
-                    <div className="flex-1"></div>
-                    <div className="py-3 px-4 rounded-lg shadow-sm bg-blue-50 dark:bg-blue-900/30 text-gray-800 dark:text-gray-200 border border-blue-100 dark:border-blue-900/30 rounded-tr-none">
-                      {message.text}
+            {/* Find only the last system response */}
+            {(() => {
+              // Get the last system response (if any)
+              const lastSystemResponse = messages.filter(msg => !msg.isUser).pop();
+              
+              return (
+                <>
+                  {/* Display only the last system response if it exists */}
+                  {lastSystemResponse && (
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-12 w-12 mt-1">
+                        <AvatarFallback className={getAvatarBackground(lastSystemResponse.agent_name)}>
+                          <AgentIcon agentName={lastSystemResponse.agent_name} />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="py-3 px-4 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-purple-100 dark:border-purple-900/30 rounded-tl-none flex-1">
+                        {lastSystemResponse.text}
+                      </div>
                     </div>
-                    <Avatar className="h-12 w-12 mt-1">
-                      <AvatarFallback className="bg-blue-100 dark:bg-blue-900/30">
-                        <User className="h-6 w-6 text-blue-600 dark:text-blue-300" />
-                      </AvatarFallback>
-                    </Avatar>
-                  </>
-                ) : (
-                  <>
-                    <Avatar className="h-12 w-12 mt-1">
-                      <AvatarFallback className={getAvatarBackground(message.agent_name)}>
-                        <AgentIcon agentName={message.agent_name} />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="py-3 px-4 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-purple-100 dark:border-purple-900/30 rounded-tl-none flex-1">
-                      {message.text}
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
+                  )}
+                </>
+              );
+            })()}
             <div ref={messageEndRef} />
           </div>
         )}
