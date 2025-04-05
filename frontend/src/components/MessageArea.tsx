@@ -5,9 +5,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, User, BookOpen, Stethoscope, HeartHandshake, UserRound } from "lucide-react";
 import { Message } from "@/types/message";
+import DOMPurify from 'dompurify';
 
 interface MessageAreaProps {
   messages: Message[];
+  isLoading?: boolean;
 }
 
 const AgentIcon = ({ agentName }: { agentName?: string }) => {
@@ -42,7 +44,7 @@ const getAvatarBackground = (agentName?: string) => {
   }
 };
 
-const MessageArea = ({ messages }: MessageAreaProps) => {
+const MessageArea = ({ messages, isLoading = false }: MessageAreaProps) => {
   const messageEndRef = useRef<HTMLDivElement>(null);
   const { speak, cancel, speaking } = useSpeechSynthesis();
   const [spokenMessageIds, setSpokenMessageIds] = useState<Set<number>>(new Set());
@@ -104,8 +106,28 @@ const MessageArea = ({ messages }: MessageAreaProps) => {
                           <AgentIcon agentName={lastSystemResponse.agent_name} />
                         </AvatarFallback>
                       </Avatar>
+                      <div 
+                        className="py-3 px-4 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-purple-100 dark:border-purple-900/30 rounded-tl-none flex-1 message-content"
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(lastSystemResponse.text) }}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Show loading indicator when waiting for response */}
+                  {isLoading && (
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-12 w-12 mt-1">
+                        <AvatarFallback className="bg-purple-100 dark:bg-purple-900/30">
+                          <Bot className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="py-3 px-4 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-purple-100 dark:border-purple-900/30 rounded-tl-none flex-1">
-                        {lastSystemResponse.text}
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-75"></div>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-150"></div>
+                          <span className="ml-2 text-sm text-gray-500">Processing your request...</span>
+                        </div>
                       </div>
                     </div>
                   )}

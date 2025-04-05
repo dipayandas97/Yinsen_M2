@@ -33,8 +33,10 @@ const Index = () => {
   const processMessageWithBackend = async (userMessage: string) => {
     setIsLoading(true);
     try {
+      console.log("Sending message to backend:", userMessage);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      // Increase timeout from 10 seconds to 60 seconds to give the backend more time to process
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       const response = await fetch("http://127.0.0.1:8000/process-text", {
         method: "POST",
@@ -46,14 +48,22 @@ const Index = () => {
       });
 
       clearTimeout(timeoutId);
+      console.log("Response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => "");
+        console.error("Error response:", errorText);
         throw new Error(`Server responded with status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      return { output: data.output, agent_name: data.agent_name };
+      console.log("Received data from backend:", data);
+      
+      // Handle response with or without agent_name
+      return { 
+        output: data.output, 
+        agent_name: data.agent_name || "Mia" // Default to "Mia" if agent_name is not provided
+      };
     } catch (error) {
       console.error("Error processing message:", error);
 
@@ -61,10 +71,15 @@ const Index = () => {
 
       if (error instanceof TypeError && error.message === "Failed to fetch") {
         errorDescription = "Could not connect to the AI backend. Please ensure the server is running at http://127.0.0.1:8000.";
+        console.error("Failed to fetch error - backend server might not be running");
       } else if (String(error).includes("405")) {
         errorDescription = "CORS issue detected (405 Method Not Allowed). Add CORS middleware to your backend.";
+        console.error("CORS issue detected");
       } else if (error.name === "AbortError") {
         errorDescription = "Request timed out. The backend server took too long to respond.";
+        console.error("Request timeout");
+      } else {
+        console.error("Other error:", String(error));
       }
 
       toast({
@@ -139,7 +154,7 @@ const Index = () => {
 
           <div className={`${leftCollapsed && rightCollapsed ? 'col-span-10' : leftCollapsed || rightCollapsed ? 'col-span-8 lg:col-span-9' : 'col-span-6 lg:col-span-8'} flex flex-col h-[calc(100vh-7.5rem)]`}>
             <div className="flex-grow rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col shadow-xl">
-              <MessageArea messages={messages} />
+              <MessageArea messages={messages} isLoading={isLoading} />
               <MessageInput 
                 currentMessage={currentMessage}
                 setCurrentMessage={setCurrentMessage}
