@@ -117,8 +117,10 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-100 dark:from-gray-950 dark:to-slate-900 flex flex-col">
       <header className="w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm py-3 px-5">
         <div className="container mx-auto flex justify-between items-center">
+          <div className="w-9"></div> {/* Empty div for spacing */}
+          
           <div className="flex items-center gap-2">
-            <span className="font-bold text-xl text-blue-600 dark:text-blue-400">Navi</span>
+            <span className="font-bold text-xl text-blue-600 dark:text-blue-400">NAAVI</span>
           </div>
           
           <Avatar className="h-9 w-9">
