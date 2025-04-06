@@ -44,6 +44,18 @@ const getAvatarBackground = (agentName?: string) => {
   }
 };
 
+// Function to strip HTML tags for speech synthesis
+const stripHtmlTags = (html: string): string => {
+  // Create a temporary div element
+  const tempDiv = document.createElement('div');
+  // Set the HTML content
+  tempDiv.innerHTML = html;
+  // Get the text content (this strips all HTML tags)
+  const textContent = tempDiv.textContent || tempDiv.innerText || '';
+  // Return cleaned text
+  return textContent;
+};
+
 const MessageArea = ({ messages, isLoading = false }: MessageAreaProps) => {
   const messageEndRef = useRef<HTMLDivElement>(null);
   const { speak, cancel, speaking } = useSpeechSynthesis();
@@ -65,7 +77,10 @@ const MessageArea = ({ messages, isLoading = false }: MessageAreaProps) => {
         if (speaking) {
           cancel();
         }
-        speak({ text: lastMessage.text });
+        
+        // Strip HTML tags before speaking the text
+        const cleanText = stripHtmlTags(lastMessage.text);
+        speak({ text: cleanText });
         
         // Mark this message as spoken
         setSpokenMessageIds(prev => {
