@@ -244,9 +244,12 @@ class MAS_system_1(object):
         # 4. add response format to the overall response dict
         overall_response_dict = overall_response_dict + f"\n [response_format]: {response_format}"
 
-        print(f"DEBUG: Overall response dict: {overall_response_dict}")
+        #print(f"DEBUG: Overall response dict: {overall_response_dict}")
 
         visualizer_response = self.visualizer_agent.generate_response(overall_response_dict)
+
+        #print(f"DEBUG: Visualizer response: {visualizer_response}")
+
         visualizer_response_dict = convert_string_to_dict(visualizer_response)
         
         #print(f"DEBUG: Visualizer response: {visualizer_response_dict}")
@@ -255,8 +258,10 @@ class MAS_system_1(object):
 
         return_response = {
             "final_response_to_user": visualizer_response_dict["final_response_to_user"],
-            "current_agent": self.current_agent
+            "summarized_response": visualizer_response_dict["summarized_response"],
+            "current_agent_name": self.current_agent.agent_name,
+            "current_agent_type": self.current_agent.agent_type
         }
 
-        return return_response
+        return return_response, self.current_agent
     

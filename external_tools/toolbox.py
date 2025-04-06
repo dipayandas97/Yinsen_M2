@@ -16,7 +16,7 @@ class Toolbox:
             if tool_response_dict['instructions']["action"] == "create":
                 # use calender api to create a new event
                 function_definition = self.aci.functions.get_definition("GOOGLE_CALENDAR__EVENTS_INSERT")
-                response = self.openai.chat.completions.create(model="gpt-4o",
+                response = self.openai.chat.completions.create(model="o3-mini",
                                                                messages=[
                                                                     {
                                                                         "role": "system",

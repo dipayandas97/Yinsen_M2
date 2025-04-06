@@ -219,7 +219,7 @@ class JARVIS:
         
         #print(f"\nDEBUG: Raw raw response from main LLM agentaw_r: {raw_response}")
 
-        # Display the response to the user -------------------------------------------------------------
+        # Display the response to the user in terminal and "local" audio output (if enabled) -------------------------------------------------------------
         if response['final_response_to_user']:
             display_msg = f"{self.current_agent.agent_name}: {response['final_response_to_user']}"
             #print(f"DEBUG: Display message: {display_msg}")
@@ -230,14 +230,15 @@ class JARVIS:
                 self.audio_output.speak(response['final_response_to_user'])
         
         # return reponse to frontend/api
-        return response['final_response_to_user'] # only return response to frontend/api when current agent is also needed
+        print(f"DEBUG: Response: {response}")
+        return response
 
     def get_response_from_MAS_system(self, user_input: str, response_format: str) -> Dict[str, Any]:
         """Process user input and return response dictionary"""
         try:
             # Get reponse from MAS model 1
-            response_dict = self.mas.get_response_from_mas_system(user_input, self.current_agent, response_format=response_format)
-            self.current_agent = response_dict["current_agent"]
+            response_dict, current_agent = self.mas.get_response_from_mas_system(user_input, self.current_agent, response_format=response_format)
+            self.current_agent = current_agent
             return response_dict
             
         except Exception as e:
