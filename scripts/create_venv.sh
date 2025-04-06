@@ -42,6 +42,7 @@ pip install --upgrade pip
 # Install all other requirements
 pip install -r requirements.txt
 
+
 echo "Virtual environment created and requirements installed!"
 echo "To activate the environment, run: source .venv_jarvis/bin/activate"
 
