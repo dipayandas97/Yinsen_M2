@@ -35,3 +35,26 @@ def process_text(input_data: TextInput):
     #agent_name = jarvis.current_agent.name if hasattr(jarvis, 'current_agent') and jarvis.current_agent else "Mia"
     # Return just the output
     return {"output": output}
+
+
+
+# Helper function to read file and return list of strings
+def read_file_lines(filepath: str) -> list:
+    if not os.path.exists(filepath):
+        return ["Error: File not found."]
+    with open(filepath, "r", encoding="utf-8") as f:
+        return [line.strip() for line in f.readlines() if line.strip()]
+
+
+@app.get("/read_logs")
+def get_file_1():
+    filepath = os.getenv("LOGS_FILE_PATH", "file1.txt")
+    lines = read_file_lines(filepath)
+    return {"data": lines}
+
+
+@app.get("/read_calendar")
+def get_file_2():
+    filepath = os.getenv("CALENDAR_FILE_PATH", "file2.txt")
+    lines = read_file_lines(filepath)
+    return {"data": lines}
