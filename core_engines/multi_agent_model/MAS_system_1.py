@@ -186,7 +186,7 @@ class MAS_system_1(object):
         if main_agent_response_dict.get("invoke_another_agent_flag", False) and main_agent_response_dict.get("invoke_agent_name", False):
             switch_status = self._switch_agent(main_agent_response_dict["invoke_agent_name"])
 
-        # 2. if using tool, get response from tool handler agent ----------------------------------------
+        # 2. if using tool, use tool and get response from tool handler agent ----------------------------------------
         else:
             if main_agent_response_dict.get("tool_usage_flag"):
                 
@@ -214,7 +214,7 @@ class MAS_system_1(object):
                     #print(f"Tool response: {tool_response_dict}")
                     
                     # Execute the tool
-                    #tool_execution_response_dict = {'status': 'success'}
+                    #tool_execution_response_dict = {'status': 'success'}                
                     tool_execution_result = self.toolbox.execute_tool(tool_response_dict)
                     
         # 3. get response from visualizer agent ---------------------------------------------------------

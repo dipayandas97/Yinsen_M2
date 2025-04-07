@@ -114,6 +114,17 @@ Response:
   }
 }
 
+Note for email tool:
+1. for send email:
+  - mandatory fields are "to", "content", "from". 
+  - if subject is not provided, then use the content to infer the subject.
+  - if "to" is not provided, then ask the user to provide the "to" email-id.
+  - always ensure that you add proper greetings and salutations to the email, and format it professionally.
+
+2. for read emails:
+  - if "until_date" is not provided, then use the  date of the 3 days ago as the default value.
+  - if "last_n_emails" is not provided, then use 10 as the default value.
+  - if both "until_date" and "last_n_emails" are not provided, then use the 'until_date' as the default mode of operation.
 
 ## 4. CONTEXT HANDLING & FAILSAFE MECHANISMS  
 

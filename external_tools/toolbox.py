@@ -103,11 +103,93 @@ class Toolbox:
 
             if tool_response_dict['instructions']["action"] == "send":
 
-                pass
+                # use email api to send an email
+                function_definition = self.aci.functions.get_definition("GMAIL__SEND_EMAIL")
+                response = self.openai.chat.completions.create(model="o3-mini",
+                                                               messages=[
+                                                                    {
+                                                                        "role": "system",
+                                                                        "content": "You are a helpful assistant that can use gmail send email function to send an email on behalf of the user. \
+                                                                            You will be given a set of instructions on how to create the email, in the form of a JSON like this: \
+                                                                                { \
+                                                                            'action': 'send', \
+                                                                            'to': 'yash@gmail.com', \
+                                                                            'from': 'dipayan@gmail.com', \
+                                                                            'subject': 'Event Confirmation', \
+                                                                            'content': 'Dear Yash,\n\nI hope this message finds you well. I wanted to confirm that I will see you at the event today. Looking forward to it!\n\nBest regards,\nDas' \
+                                                                                }. \
+                                                                            Use this information to send an email on behalf of the user. \
+                                                                            Follow the function definition and the tool call format to send the email. \
+                                                                            Any provided date and time format is DD/MM/YYYY and HH:MM."
+                                                                    },
+                                                                    {
+                                                                        "role": "user",
+                                                                        "content": f"use the email tool to send an email using the following information: {tool_response_dict['instructions']}",
+                                                                    },
+                                                                ],
+                                                                tools=[function_definition],
+                                                                tool_choice="required",  # force the model to generate a tool call for demo purposes
+                                                                )
+                #print(f"DEBUG: Response inside toolbox.py: {response}")
+                tool_call = (
+                    response.choices[0].message.tool_calls[0]
+                    if response.choices[0].message.tool_calls
+                    else None
+                )
+                print(f"DEBUG: Tool call inside toolbox.py: {tool_call}")
+                result = self.aci.functions.execute(
+                    "GMAIL__SEND_EMAIL",
+                    json.loads(tool_call.function.arguments),
+                    linked_account_owner_id=self.LINKED_ACCOUNT_OWNER_ID,
+                )
+                #print(f"DEBUG: Tool execution result inside toolbox.py: {result}")
+                return result
 
             elif tool_response_dict['instructions']["action"] == "view":
-
-                pass
+                # use email api to view emails
+                function_definition = self.aci.functions.get_definition("GMAIL__MESSAGES_LIST")
+                response = self.openai.chat.completions.create(model="o3-mini",
+                                                               messages=[
+                                                                    {
+                                                                        "role": "system",
+                                                                        "content": "You are a helpful assistant that can use gmail message list function to view emails on behalf of the user. \
+                                                                            You will be given a set of instructions regarding how to view the emails, in the form of a JSON. \
+                                                                            The JSON can either be like:\
+                                                                                { \
+                                                                            'action': 'read', \
+                                                                            'until_date': '29/03/2025' \
+                                                                                }. \
+                                                                            or like:\
+                                                                                { \
+                                                                            'action': 'read', \
+                                                                            'last_n_emails': 10 \
+                                                                                }. \
+                                                                            Use this information to view the emails. \
+                                                                            Follow the function definition and the tool call format to view the emails. \
+                                                                            Any provided date format is DD/MM/YYYY."
+                                                                    },
+                                                                    {
+                                                                        "role": "user",
+                                                                        "content": f"use the email tool to view emails using the following information: {tool_response_dict['instructions']}",
+                                                                    },
+                                                                ],
+                                                                tools=[function_definition],
+                                                                tool_choice="required",  # force the model to generate a tool call for demo purposes
+                                                                )
+                #print(f"DEBUG: Response inside toolbox.py: {response}")
+                tool_call = (
+                    response.choices[0].message.tool_calls[0]
+                    if response.choices[0].message.tool_calls
+                    else None
+                )
+                print(f"DEBUG: Tool call inside toolbox.py: {tool_call}")
+                result = self.aci.functions.execute(
+                    "GMAIL__MESSAGES_LIST",
+                    json.loads(tool_call.function.arguments),
+                    linked_account_owner_id=self.LINKED_ACCOUNT_OWNER_ID,
+                )
+                #print(f"DEBUG: Tool execution result inside toolbox.py: {result}")
+                return result
 
 
 '''
@@ -144,5 +226,14 @@ Tool response: {
 }
 
 View emails:
+
+{
+  "tool": "email",
+  "instructions": {
+    "action": "read",
+    "until_date": "29/03/2025",
+  }
+}
+
 
 '''
