@@ -144,10 +144,12 @@ class Toolbox:
                 )
                 #print(f"DEBUG: Tool execution result inside toolbox.py: {result}")
                 return result
-
-            elif tool_response_dict['instructions']["action"] == "view":
-                # use email api to view emails
+            '''
+            elif tool_response_dict['instructions']["action"] == "read":
+                # use email api to read emails
+                # 1. retrieve list of emails - in the form of IDs
                 function_definition = self.aci.functions.get_definition("GMAIL__MESSAGES_LIST")
+                print(f"DEBUG: Email view i inside toolbox.py: {tool_response_dict['instructions']}")
                 response = self.openai.chat.completions.create(model="o3-mini",
                                                                messages=[
                                                                     {
@@ -188,9 +190,81 @@ class Toolbox:
                     json.loads(tool_call.function.arguments),
                     linked_account_owner_id=self.LINKED_ACCOUNT_OWNER_ID,
                 )
-                #print(f"DEBUG: Tool execution result inside toolbox.py: {result}")
-                return result
+                print(f"DEBUG: Tool execution result inside toolbox.py: {result}")
 
+                # here we get a list of email IDs like the following:
+
+                #DEBUG: Tool execution result inside toolbox.py: success=True data={'messages': [{'id': '1960dfae71df3aa5', 'threadId': '1960dfae71df3aa5'}, {'id': '1960ddb5bf95d60e', 'threadId': '1960ddb5bf95d60e'}, {'id': '1960dcb8b8996882', 'threadId': '1960dcb8b8996882'}, {'id': '1960da14f79ddfbf', 'threadId': '1960da14f79ddfbf'}, {'id': '1960cc30a2a03694', 'threadId': '1960cc238ce2fa68'}, {'id': '1960cc238ce2fa68', 'threadId': '1960cc238ce2fa68'}, {'id': '19603f4130e0009c', 'threadId': '19603f4130e0009c'}, {'id': '19601a8d15b3ec9b', 'threadId': '19601a8d15b3ec9b'}, {'id': '196006191c98762f', 'threadId': '196006191c98762f'}, {'id': '195fc314e169ae21', 'threadId': '195fc314e169ae21'}], 'nextPageToken': '12565313761980251534', 'resultSizeEstimate': 201} error=None
+            
+                # 2. retrieve the email content
+                function_definition = self.aci.functions.get_definition("GMAIL__MESSAGES_GET")
+                response = self.openai.chat.completions.create(model="o3-mini",
+                                                               messages=[
+                                                                    {
+                                                                        "role": "system",
+                                                                        "content": "You are a helpful assistant that can use gmail message get function to view emails' content on behalf of the user. \
+                                                                            You will be given a set of id and threadId of the emails, in the form of a JSON like the following: \
+                                                                                {'messages': [{'id': '1960dfae71df3aa5', 'threadId': '1960dfae71df3aa5'}, {'id': '1960ddb5bf95d60e', 'threadId': '1960ddb5bf95d60e'}, {'id': '1960dcb8b8996882', 'threadId': '1960dcb8b8996882'}, {'id': '1960da14f79ddfbf', 'threadId': '1960da14f79ddfbf'}, {'id': '1960cc30a2a03694', 'threadId': '1960cc238ce2fa68'}, {'id': '1960cc238ce2fa68', 'threadId': '1960cc238ce2fa68'}, {'id': '19603f4130e0009c', 'threadId': '19603f4130e0009c'}, {'id': '19601a8d15b3ec9b', 'threadId': '19601a8d15b3ec9b'}, {'id': '196006191c98762f', 'threadId': '196006191c98762f'}, {'id': '195fc314e169ae21', 'threadId': '195fc314e169ae21'}], 'nextPageToken': '12565313761980251534', 'resultSizeEstimate': 201}\
+                                                                            Use this information to view the content of the all the emails in the list. \
+                                                                            Follow the function definition and the tool call format to view the emails. \
+                                                                            Any provided date format is DD/MM/YYYY."
+                                                                    },
+                                                                    {
+                                                                        "role": "user",
+                                                                        "content": f"use the email tool to view the content of the emails using the following information: {result.data}",
+                                                                    },
+                                                                ],
+                                                                tools=[function_definition],
+                                                                tool_choice="required",  # force the model to generate a tool call for demo purposes
+                                                                )
+                #print(f"DEBUG: Response inside toolbox.py: {response}")
+                tool_call = (
+                    response.choices[0].message.tool_calls[0]
+                    if response.choices[0].message.tool_calls
+                    else None
+                )
+                print(f"DEBUG: Tool call inside toolbox.py: {tool_call}")
+                result = self.aci.functions.execute(
+                    "GMAIL__MESSAGES_GET",
+                    json.loads(tool_call.function.arguments),
+                    linked_account_owner_id=self.LINKED_ACCOUNT_OWNER_ID,
+                )
+                print(f"DEBUG: Tool execution result inside toolbox.py: {result}")
+
+
+
+                return result
+            '''
+
+        elif tool_response_dict["tool"] == "expense_manager":
+            
+            if tool_response_dict['instructions']["action"] == "log_expense":
+                # use expense manager tool to log an expense
+                pass
+            elif tool_response_dict['instructions']["action"] == "view_last_N_expenses":
+                pass
+            elif tool_response_dict['instructions']["action"] == "view_all_expenses":
+                pass
+            elif tool_response_dict['instructions']["action"] == "view_expenses_by_category":
+                pass
+            elif tool_response_dict['instructions']["action"] == "view_expenses_by_date":
+                pass
+            elif tool_response_dict['instructions']["action"] == "view_expenses_by_week":
+                pass
+            elif tool_response_dict['instructions']["action"] == "view_expenses_by_month":
+                pass
+            elif tool_response_dict['instructions']["action"] == "view_expenses_by_year":
+                pass
+
+        elif tool_response_dict["tool"] == "diary":
+            if tool_response_dict['instructions']["action"] == "create_entry":
+                pass
+            elif tool_response_dict['instructions']["action"] == "view_entry":
+                pass
+            elif tool_response_dict['instructions']["action"] == "edit_entry":
+                pass
+            elif tool_response_dict['instructions']["action"] == "delete_entry":
+                pass
 
 '''
 Calender:

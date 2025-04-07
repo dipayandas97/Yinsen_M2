@@ -85,47 +85,13 @@ Response:
 }
 
 
-### Example for Email Tool - Read Emails:
-Input:  
-"main_agent_response: Read my emails from the last 3 days. current_datetime: 02/04/2025 13:00"  
-
-Response:  
-
-{
-  "tool": "email",
-  "instructions": {
-    "action": "read",
-    "until_date": "29/03/2025",
-  }
-}
-
-Another example:
-
-Input:  
-"main_agent_response: Get my last 10 emails. current_datetime: 02/04/2025 13:00"  
-
-Response:  
-
-{
-  "tool": "email",
-  "instructions": {
-    "action": "read",
-    "last_n_emails": 10,
-  }
-}
-
 Note for email tool:
 1. for send email:
   - mandatory fields are "to", "content", "from". 
   - if subject is not provided, then use the content to infer the subject.
   - if "to" is not provided, then ask the user to provide the "to" email-id.
   - always ensure that you add proper greetings and salutations to the email, and format it professionally.
-
-2. for read emails:
-  - if "until_date" is not provided, then use the  date of the 3 days ago as the default value.
-  - if "last_n_emails" is not provided, then use 10 as the default value.
-  - if both "until_date" and "last_n_emails" are not provided, then use the 'until_date' as the default mode of operation.
-
+  
 ## 4. CONTEXT HANDLING & FAILSAFE MECHANISMS  
 
 - Accuracy & Precision: Always ensure the extracted arguments from the instruction are accurate. If the instruction is incomplete, make reasonable assumptions based on the provided context (e.g., infer dates or end_date from the current datetime and duration) but avoid errors.
