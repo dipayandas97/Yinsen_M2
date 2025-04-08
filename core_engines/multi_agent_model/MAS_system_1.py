@@ -30,7 +30,7 @@ class MAS_system_1(object):
         self.toolbox = Toolbox()
 
         # set current agent
-        self.current_agent = self.orchestrator_agent
+        self.current_agent = self.finance_manager_agent
     
     def _init_agents(self):
         """Initialize all LLM agents"""
@@ -260,7 +260,11 @@ class MAS_system_1(object):
             "final_response_to_user": visualizer_response_dict["final_response_to_user"],
             "summarized_response": visualizer_response_dict["summarized_response"],
             "current_agent_name": self.current_agent.agent_name,
-            "current_agent_type": self.current_agent.agent_type
+            "current_agent_type": self.current_agent.agent_type,
+            "logs_updated": False,
+            "calendar_updated": False,
+            "youtube_urls": [],
+            "display_images": []
         }
 
         return return_response, self.current_agent

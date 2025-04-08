@@ -117,7 +117,8 @@ class LLMAgent:
         current_datetime = get_formatted_datetime()
         messages.append({
             "role": "system",
-            "content": f"current_datetime: {current_datetime} | \
+            "content": f"Following is the current system data. Use this when needed: \
+                         current_datetime: {current_datetime} | \
                          current_agent: {self.agent_name} | \
                          current_agent_type: {self.agent_type} | \
                          current_agent_category: {self.agent_category}"

@@ -230,7 +230,7 @@ class JARVIS:
                 self.audio_output.speak(response['final_response_to_user'])
         
         # return reponse to frontend/api
-        print(f"DEBUG: Response: {response}")
+        #print(f"DEBUG: Response: {response}")
         return response
 
     def get_response_from_MAS_system(self, user_input: str, response_format: str) -> Dict[str, Any]:

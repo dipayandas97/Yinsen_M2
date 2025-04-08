@@ -3,6 +3,9 @@ from aipolabs.types.functions import FunctionDefinitionFormat
 from openai import OpenAI
 import os
 import json
+import pandas as pd
+from datetime import datetime
+
 class Toolbox:
     def __init__(self):
         self.aci = ACI()
@@ -240,21 +243,408 @@ class Toolbox:
             
             if tool_response_dict['instructions']["action"] == "log_expense":
                 # use expense manager tool to log an expense
-                pass
-            elif tool_response_dict['instructions']["action"] == "view_last_N_expenses":
-                pass
+                
+                # check if we expense_log.csv file exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    # create the file and directory if needed
+                    os.makedirs('./data/finance', exist_ok=True)
+                    with open('./data/finance/expense_log.csv', 'w') as f:
+                        f.write('date,amount,category,currency\n')
+
+                # read the expense_log.csv file using pandas
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                #print(df)
+                    
+                # append the new expense to the expense_log.csv file
+                # create a new row as a dictionary
+                new_expense = {
+                    'date': datetime.strptime(tool_response_dict['instructions']['date'], '%d/%m/%Y').strftime('%d/%m/%Y'),
+                    'amount': tool_response_dict['instructions']['amount'],
+                    'category': tool_response_dict['instructions']['category'],
+                    'currency': tool_response_dict['instructions']['currency']
+                }
+                
+                # use concat instead of append (which is deprecated)
+                df = pd.concat([df, pd.DataFrame([new_expense])], ignore_index=True)
+                
+                # Convert date strings to datetime objects for proper sorting
+                df['date_obj'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
+                # sort the dataframe by date
+                df = df.sort_values(by='date_obj', ascending=True)
+                # Remove the temporary column used for sorting
+                df = df.drop('date_obj', axis=1)
+                
+                df.to_csv('./data/finance/expense_log.csv', index=False)
+                #print(df)
+                return {'status': 'success', 'message': 'Expense logged successfully'}
+
             elif tool_response_dict['instructions']["action"] == "view_all_expenses":
-                pass
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Return all expenses
+                return {'status': 'success', 'data': df.to_dict('records')}
+                
+            elif tool_response_dict['instructions']["action"] == "view_last_N_expenses":
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Get the number of expenses to return
+                n = int(tool_response_dict['instructions'].get('n', 5))
+                
+                # Convert date strings to datetime objects for proper sorting
+                df['date_obj'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
+                # Sort by date, most recent first
+                df = df.sort_values(by='date_obj', ascending=False)
+                # Remove the temporary column used for sorting
+                df = df.drop('date_obj', axis=1)
+                
+                # Get the last N expenses
+                last_n_expenses = df.head(n).to_dict('records')
+                
+                return {'status': 'success', 'data': last_n_expenses}
+                
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_category":
-                pass
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Get the category to filter by
+                category = tool_response_dict['instructions'].get('category', '')
+                
+                if not category:
+                    return {'status': 'error', 'message': 'No category specified for view_expenses_by_category'}
+                
+                # Filter expenses by category
+                filtered_df = df[df['category'].str.lower() == category.lower()]
+                
+                if filtered_df.empty:
+                    return {'status': 'info', 'message': f'No expenses found for category: {category}'}
+                
+                return {'status': 'success', 'data': filtered_df.to_dict('records')}
+                
+            elif tool_response_dict['instructions']["action"] == "view_expenses_category_wise":
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Group by category and return summary
+                category_summary = df.groupby('category').agg({
+                    'amount': ['sum', 'count']
+                }).reset_index()
+                category_summary.columns = ['category', 'total_amount', 'count']
+                
+                # Sort by total amount in descending order
+                category_summary = category_summary.sort_values(by='total_amount', ascending=False)
+                
+                return {'status': 'success', 'data': category_summary.to_dict('records')}
+
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_date":
-                pass
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Get the date to filter by
+                date_str = tool_response_dict['instructions'].get('date', '')
+                
+                if not date_str:
+                    return {'status': 'error', 'message': 'No date specified for view_expenses_by_date'}
+                
+                # Parse the date
+                try:
+                    filter_date = datetime.strptime(date_str, '%d/%m/%Y').strftime('%d/%m/%Y')
+                except ValueError:
+                    return {'status': 'error', 'message': 'Invalid date format. Use DD/MM/YYYY'}
+                
+                # Filter expenses by date
+                filtered_df = df[df['date'] == filter_date]
+                
+                if filtered_df.empty:
+                    return {'status': 'info', 'message': f'No expenses found for date: {date_str}'}
+                
+                return {'status': 'success', 'data': filtered_df.to_dict('records')}
+                
+            elif tool_response_dict['instructions']["action"] == "view_daywise_expenses":
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Group by date and return summary
+                date_summary = df.groupby('date').agg({
+                    'amount': ['sum', 'count']
+                }).reset_index()
+                date_summary.columns = ['date', 'total_amount', 'count']
+                
+                # Convert date strings to datetime objects for proper sorting
+                date_summary['date_obj'] = pd.to_datetime(date_summary['date'], format='%d/%m/%Y')
+                # Sort by date
+                date_summary = date_summary.sort_values(by='date_obj', ascending=True)
+                # Remove the temporary column used for sorting
+                date_summary = date_summary.drop('date_obj', axis=1)
+                
+                return {'status': 'success', 'data': date_summary.to_dict('records')}
+            
+            # NA for now
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_week":
-                pass
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Get the week to filter by (format: YYYY-WW)
+                week_str = tool_response_dict['instructions'].get('week', '')
+                
+                if not week_str:
+                    return {'status': 'error', 'message': 'No week specified for view_expenses_by_week'}
+                
+                try:
+                    # Parse the week string (format: YYYY-WW)
+                    year, week = map(int, week_str.split('-'))
+                    
+                    # Convert date strings to datetime objects
+                    df['date_obj'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
+                    
+                    # Extract year and week from date
+                    df['year'] = df['date_obj'].dt.isocalendar().year
+                    df['week'] = df['date_obj'].dt.isocalendar().week
+                    
+                    # Filter expenses by year and week
+                    filtered_df = df[(df['year'] == year) & (df['week'] == week)]
+                    
+                    # Drop temporary columns
+                    filtered_df = filtered_df.drop(['date_obj', 'year', 'week'], axis=1)
+                    
+                except (ValueError, TypeError):
+                    return {'status': 'error', 'message': 'Invalid week format. Use YYYY-WW (e.g., 2023-01)'}
+                
+                if filtered_df.empty:
+                    return {'status': 'info', 'message': f'No expenses found for week: {week_str}'}
+                
+                return {'status': 'success', 'data': filtered_df.to_dict('records')}
+            # NA for now
+            elif tool_response_dict['instructions']["action"] == "view_weekly_expenses":
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Convert date strings to datetime objects
+                df['date_obj'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
+                
+                # Extract year and week from date
+                df['year_week'] = df['date_obj'].dt.strftime('%Y-%V')
+                
+                # Group by year-week and return summary
+                weekly_summary = df.groupby('year_week').agg({
+                    'amount': ['sum', 'count']
+                }).reset_index()
+                weekly_summary.columns = ['week', 'total_amount', 'count']
+                
+                # Sort by week
+                weekly_summary = weekly_summary.sort_values(by='week', ascending=False)
+                
+                return {'status': 'success', 'data': weekly_summary.to_dict('records')}
+                
+
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_month":
-                pass
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Get the month and year to filter by
+                month = tool_response_dict['instructions'].get('month', '')
+                year = tool_response_dict['instructions'].get('year', '')
+                
+                if not month or not year:
+                    return {'status': 'error', 'message': 'Both month and year must be specified for view_expenses_by_month'}
+                
+                try:
+                    # Parse month and year as integers
+                    month = int(month)
+                    year = int(year)
+                    
+                    # Validate month range
+                    if month < 1 or month > 12:
+                        return {'status': 'error', 'message': 'Month must be between 1 and 12'}
+                    
+                    # Convert date strings to datetime objects
+                    df['date_obj'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
+                    
+                    # Filter expenses by year and month
+                    filtered_df = df[(df['date_obj'].dt.year == year) & (df['date_obj'].dt.month == month)]
+                    
+                    # Drop temporary column
+                    filtered_df = filtered_df.drop('date_obj', axis=1)
+                    
+                except (ValueError, TypeError):
+                    return {'status': 'error', 'message': 'Invalid month or year format. Month and year must be numbers.'}
+                
+                if filtered_df.empty:
+                    return {'status': 'info', 'message': f'No expenses found for month: {month}/{year}'}
+                
+                return {'status': 'success', 'data': filtered_df.to_dict('records')}
+                
+            elif tool_response_dict['instructions']["action"] == "view_monthwise_expenses":
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Convert date strings to datetime objects
+                df['date_obj'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
+                
+                # Extract year and month from date
+                df['year_month'] = df['date_obj'].dt.strftime('%Y-%m')
+                
+                # Group by year-month and return summary
+                monthly_summary = df.groupby('year_month').agg({
+                    'amount': ['sum', 'count']
+                }).reset_index()
+                monthly_summary.columns = ['month', 'total_amount', 'count']
+                
+                # Sort by month
+                monthly_summary = monthly_summary.sort_values(by='month', ascending=False)
+                
+                return {'status': 'success', 'data': monthly_summary.to_dict('records')}
+                
+
+            elif tool_response_dict['instructions']["action"] == "view_yearwise_expenses":
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Convert date strings to datetime objects
+                df['date_obj'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
+                
+                # Extract year from date
+                df['year'] = df['date_obj'].dt.year
+                
+                # Group by year and return summary
+                yearly_summary = df.groupby('year').agg({
+                    'amount': ['sum', 'count']
+                }).reset_index()
+                yearly_summary.columns = ['year', 'total_amount', 'count']
+                
+                # Sort by year
+                yearly_summary = yearly_summary.sort_values(by='year', ascending=False)
+                
+                return {'status': 'success', 'data': yearly_summary.to_dict('records')}
+
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_year":
-                pass
+                # Check if expense_log.csv exists
+                if not os.path.exists('./data/finance/expense_log.csv'):
+                    return {'status': 'error', 'message': 'No expense log found'}
+                
+                # Read the expense log
+                df = pd.read_csv('./data/finance/expense_log.csv')
+                
+                # Check if there are any expenses
+                if df.empty:
+                    return {'status': 'info', 'message': 'No expenses logged yet'}
+                
+                # Get the year to filter by
+                year_str = tool_response_dict['instructions'].get('year', '')
+                
+                if not year_str:
+                    return {'status': 'error', 'message': 'No year specified for view_expenses_by_year'}
+                
+                try:
+                    # Parse the year
+                    year = int(year_str)
+                    
+                    # Convert date strings to datetime objects
+                    df['date_obj'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
+                    
+                    # Filter expenses by year
+                    filtered_df = df[df['date_obj'].dt.year == year]
+                    
+                    # Drop temporary column
+                    filtered_df = filtered_df.drop('date_obj', axis=1)
+                    
+                except (ValueError, TypeError):
+                    return {'status': 'error', 'message': 'Invalid year format. Use YYYY (e.g., 2023)'}
+                
+                if filtered_df.empty:
+                    return {'status': 'info', 'message': f'No expenses found for year: {year_str}'}
+                
+                return {'status': 'success', 'data': filtered_df.to_dict('records')}
+                
 
         elif tool_response_dict["tool"] == "diary":
             if tool_response_dict['instructions']["action"] == "create_entry":

@@ -16,6 +16,7 @@ aipolabs
 
 numpy>=1.24.0
 matplotlib>=3.7.2
+pandas>=2.0.3
 
 # System monitoring
 psutil>=5.9.0

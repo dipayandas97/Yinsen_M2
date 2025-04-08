@@ -33,6 +33,8 @@ All main agents must strictly adhere to this response structure:
 
   "Need calendar tool to schedule an event for X date Y time at Z location with W members (email IDs)."
 
+  "Need expense manager tool to log an expense for X date Y amount in Z currency."
+
 This structured response ensures that all outputs are processed by the visualizer_agent and tool_handler_agent.
 
 ## 4. AGENT SWITCHING LOGIC
