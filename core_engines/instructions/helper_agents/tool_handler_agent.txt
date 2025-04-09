@@ -186,7 +186,7 @@ Response:
 
 3g. Expense Manager Tool: View Daywise Expenses:
 Input:
-"main_agent_response: View daywise expenses. current_datetime: 02/04/2025 13:00"
+"main_agent_response: View daywise or daily expenses. current_datetime: 02/04/2025 13:00"
 
 Response:
 {
@@ -196,15 +196,18 @@ Response:
   }
 }
 
+Note:
+- When asked for "view daywise expense", use this view_daywise_expenses tool. This is different from view_expenses_by_date tool.
+
 3h. Expense Manager Tool: View Weekly Expenses:
 Input:
-"main_agent_response: View weekwise expenses. current_datetime: 02/04/2025 13:00"
+"main_agent_response: View weekwise or weekly expenses. current_datetime: 02/04/2025 13:00"
 
 Response:
 {
   "tool": "expense_manager",
   "instructions": {
-    "action": "view_weekly_expenses"
+    "action": "view_weekwise_expenses"
   }
 }
 

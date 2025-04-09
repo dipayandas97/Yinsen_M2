@@ -4,7 +4,10 @@ from core_engines.utils.parsers import convert_string_to_dict, convert_tool_resp
 #from core_engines.utils.parsers import convert_to_boolean
 from core_engines.utils.utils import _dict_to_string
 from external_tools.toolbox import Toolbox
+
 from typing import Dict, Any
+import base64
+import os
 
 class MAS_system_1(object):
     def __init__(self,
@@ -187,13 +190,23 @@ class MAS_system_1(object):
         Get the response from the MAS model 1.
         Here we define the flow of the MAS system.
         '''
+        return_response = {
+            "final_response_to_user": "",
+            "summarized_response": "",
+            "current_agent_name": "",
+            "current_agent_type": "",
+            "logs_updated": False,
+            "calendar_updated": False,
+            "youtube_urls": [],
+            "display_images": []
+        }
 
         # 1. get response from main LLM agent : simple+detailed response -----------------------------------
         main_agent_response_dict = main_llm_agent.generate_response(user_input)
         #print(f"DEBUG: Raw response: {main_agent_response_dict}")
         # convert string to dict
         main_agent_response_dict = convert_string_to_dict(main_agent_response_dict)
-        #print(f"\nResponse dict: {main_agent_response_dict}")
+        print(f"\nResponse dict: {main_agent_response_dict}")
         
         # now we have a dictionary with the following keys:
         # a. simple response
@@ -236,7 +249,7 @@ class MAS_system_1(object):
                     # Execute the tool
                     #tool_execution_response_dict = {'status': 'success'}                
                     tool_execution_result = self.toolbox.execute_tool(tool_response_dict)
-                    
+                    print(f"DEBUG: Tool execution result: {tool_execution_result}")
         # 3. get response from visualizer agent ---------------------------------------------------------
         # if no tool is used, return the detailed response
         if not main_agent_response_dict["tool_usage_flag"]:
@@ -252,13 +265,30 @@ class MAS_system_1(object):
         
         # if tool is used, return the detailed response, tool usage flag, tool usage response, tool instruction from tool agent, and tool execution result
         elif main_agent_response_dict["tool_usage_flag"]:
-            # handle tool error case
+            # handle tool error case - later
+            
+            if type(tool_execution_result) == dict:
+                #extract image path
+                if 'image_path' in tool_execution_result.keys():
+                    for img_path in tool_execution_result['image_path']:
+                        if os.path.exists(img_path):
+                            print(f'DEBUG: Image path: {img_path}')
+                            with open(img_path, 'rb') as image_file:
+                                image = base64.b64encode(image_file.read()).decode('utf-8')
+                                return_response['display_images'].append(image)
+
+                # remove image_path from dict
+                tool_execution_result.pop('image_path', None)
+
+                tool_execution_result_str = _dict_to_string(tool_execution_result)
+            else:
+                tool_execution_result_str = tool_execution_result
 
             overall_response_dict = f'[main_agent_response]: {main_agent_response_dict["detailed_response"]}\n \
                                       [tool_usage]: {main_agent_response_dict["tool_usage_flag"]}\n \
                                       [tool_input_from_main_agent]: {main_agent_response_dict["tool_usage_response"]}\n \
                                       [tool_instruction_from_tool_agent]: {str(tool_response_dict)}\n \
-                                      [tool_execution_result]: {str(tool_execution_result)}'
+                                      [tool_execution_result]: {tool_execution_result_str}'
         
 
         # 4. add response format to the overall response dict
@@ -276,16 +306,12 @@ class MAS_system_1(object):
 
         # Format the visualizer response
 
-        return_response = {
-            "final_response_to_user": visualizer_response_dict["final_response_to_user"],
-            "summarized_response": visualizer_response_dict["summarized_response"],
-            "current_agent_name": self.current_agent.agent_name,
-            "current_agent_type": self.current_agent.agent_type,
-            "logs_updated": False,
-            "calendar_updated": False,
-            "youtube_urls": [],
-            "display_images": []
-        }
+        return_response['final_response_to_user'] = visualizer_response_dict["final_response_to_user"]
+        return_response['summarized_response'] = visualizer_response_dict["summarized_response"]
+        return_response['current_agent_name'] = self.current_agent.agent_name
+        return_response['current_agent_type'] = self.current_agent.agent_type
+
+        #print(f"DEBUG: Return response: {return_response}")
 
         return return_response, self.current_agent
     

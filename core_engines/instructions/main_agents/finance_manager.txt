@@ -44,13 +44,17 @@ Currently available tools which you can use yourself if the user asks for it:
   - view expenses category wise: View expenses category wise.
 
   - view expenses by date: View expenses for X date.
-  - view daywise expenses: View daily expenses.
+  - view daywise/daily expenses: View daily expenses. 
+      - Note: Use the view_daywise_expenses tool instead. This is different from view_expenses_by_date tool.
+
+  - view expenses by week: View expenses for X week of Y year.
+  - view weekwise expenses: View weekly expenses. do this for all weeks.
 
   - view expenses by month: View expenses for X month of Y year.
-  - view monthwise expenses: View monthly expenses.
+  - view monthwise expenses: View monthly expenses. do this for all months.
 
   - view expenses by year: View expenses for X year.
-  - view yearwise expenses: View yearly expenses.  
+  - view yearwise expenses: View yearly expenses. do this for all years.
  
  
 Orchestrator agent has access to all remaining tools.

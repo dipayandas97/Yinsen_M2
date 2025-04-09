@@ -5,6 +5,9 @@ import os
 import json
 import pandas as pd
 from datetime import datetime
+import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.io as pio
 
 class Toolbox:
     def __init__(self):
@@ -279,17 +282,18 @@ class Toolbox:
                 return {'status': 'success', 'message': 'Expense logged successfully'}
 
             elif tool_response_dict['instructions']["action"] == "view_all_expenses":
+                #print(f"DEBUG: Viewing all expenses inside toolbox.py")
                 # Check if expense_log.csv exists
                 if not os.path.exists('./data/finance/expense_log.csv'):
                     return {'status': 'error', 'message': 'No expense log found'}
                 
                 # Read the expense log
                 df = pd.read_csv('./data/finance/expense_log.csv')
-                
+                #print(f"DEBUG: Expense log dataframe: {df}")
                 # Check if there are any expenses
                 if df.empty:
                     return {'status': 'info', 'message': 'No expenses logged yet'}
-                
+                #print(f"DEBUG: Returning all expenses inside toolbox.py")
                 # Return all expenses
                 return {'status': 'success', 'data': df.to_dict('records')}
                 
@@ -366,7 +370,33 @@ class Toolbox:
                 
                 # Sort by total amount in descending order
                 category_summary = category_summary.sort_values(by='total_amount', ascending=False)
+
+                # Create interactive bar chart with plotly
+                fig = px.bar(
+                    category_summary, 
+                    x='category', 
+                    y='total_amount',
+                    title='Category-wise Expenses',
+                    labels={'category': 'Category', 'total_amount': 'Total Amount'},
+                    color='total_amount',
+                    color_continuous_scale='Viridis'
+                )
                 
+                # Improve layout
+                fig.update_layout(
+                    xaxis_title='Category',
+                    yaxis_title='Total Amount',
+                    xaxis={'categoryorder': 'total descending'},
+                    margin=dict(l=20, r=20, t=40, b=20)
+                )
+                
+                # Ensure directory exists
+                os.makedirs('./data/finance', exist_ok=True)
+                
+                # Save as interactive HTML and static image
+                #pio.write_html(fig, './data/finance/category_wise_expenses.html')
+                fig.write_image('./data/finance/category_wise_expenses.png')
+
                 return {'status': 'success', 'data': category_summary.to_dict('records')}
 
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_date":
@@ -426,9 +456,33 @@ class Toolbox:
                 # Remove the temporary column used for sorting
                 date_summary = date_summary.drop('date_obj', axis=1)
                 
-                return {'status': 'success', 'data': date_summary.to_dict('records')}
+                # Create interactive bar chart with plotly
+                fig = px.bar(
+                    date_summary, 
+                    x='date', 
+                    y='total_amount',
+                    title='Day-wise Expenses',
+                    labels={'date': 'Date', 'total_amount': 'Total Amount'},
+                    color='total_amount',
+                    color_continuous_scale='Viridis'
+                )
+                
+                # Improve layout
+                fig.update_layout(
+                    xaxis_title='Date',
+                    yaxis_title='Total Amount',
+                    margin=dict(l=20, r=20, t=40, b=20)
+                )
+                
+                # Ensure directory exists
+                os.makedirs('./data/finance', exist_ok=True)
+                
+                # Save as static image
+                fig.write_image('./data/finance/daywise_expenses.png')
+                
+                return {'status': 'success', 'data': date_summary.to_dict('records'), 'image_path': ['./data/finance/daywise_expenses.png']}
             
-            # NA for now
+            # NA for now --------------------
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_week":
                 # Check if expense_log.csv exists
                 if not os.path.exists('./data/finance/expense_log.csv'):
@@ -472,7 +526,7 @@ class Toolbox:
                 
                 return {'status': 'success', 'data': filtered_df.to_dict('records')}
             # NA for now
-            elif tool_response_dict['instructions']["action"] == "view_weekly_expenses":
+            elif tool_response_dict['instructions']["action"] == "view_weekwise_expenses":
                 # Check if expense_log.csv exists
                 if not os.path.exists('./data/finance/expense_log.csv'):
                     return {'status': 'error', 'message': 'No expense log found'}
@@ -488,19 +542,47 @@ class Toolbox:
                 df['date_obj'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
                 
                 # Extract year and week from date
-                df['year_week'] = df['date_obj'].dt.strftime('%Y-%V')
+                df['year'] = df['date_obj'].dt.isocalendar().year
+                df['week'] = df['date_obj'].dt.isocalendar().week
+                df['year_week'] = df['year'].astype(str) + '-W' + df['week'].astype(str).str.zfill(2)
                 
                 # Group by year-week and return summary
-                weekly_summary = df.groupby('year_week').agg({
+                weekly_summary = df.groupby(['year_week', 'week', 'year']).agg({
                     'amount': ['sum', 'count']
                 }).reset_index()
-                weekly_summary.columns = ['week', 'total_amount', 'count']
+                weekly_summary.columns = ['year_week', 'week', 'year', 'total_amount', 'count']
                 
-                # Sort by week
-                weekly_summary = weekly_summary.sort_values(by='week', ascending=False)
+                # Sort by year and week
+                weekly_summary = weekly_summary.sort_values(by=['year', 'week'], ascending=[False, False])
                 
-                return {'status': 'success', 'data': weekly_summary.to_dict('records')}
+                # Create interactive bar chart with plotly
+                fig = px.bar(
+                    weekly_summary, 
+                    x='week', 
+                    y='total_amount',
+                    title='Week-wise Expenses',
+                    labels={'week': 'Week', 'total_amount': 'Total Amount'},
+                    color='total_amount',
+                    color_continuous_scale='Viridis',
+                    hover_data=['year_week']  # Show the year-week string on hover
+                )
                 
+                # Improve layout
+                fig.update_layout(
+                    xaxis_title='Week',
+                    yaxis_title='Total Amount',
+                    xaxis={'dtick': 1},  # Force integer ticks
+                    margin=dict(l=20, r=20, t=40, b=20)
+                )
+                
+                # Ensure directory exists
+                os.makedirs('./data/finance', exist_ok=True)
+                
+                # Save as static image
+                fig.write_image('./data/finance/weekwise_expenses.png')
+                
+                return {'status': 'success', 'data': weekly_summary.to_dict('records'), 'image_path': ['./data/finance/weekwise_expenses.png']}
+            #--------------------------------
 
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_month":
                 # Check if expense_log.csv exists
@@ -574,9 +656,32 @@ class Toolbox:
                 # Sort by month
                 monthly_summary = monthly_summary.sort_values(by='month', ascending=False)
                 
-                return {'status': 'success', 'data': monthly_summary.to_dict('records')}
+                # Create interactive bar chart with plotly
+                fig = px.bar(
+                    monthly_summary, 
+                    x='month', 
+                    y='total_amount',
+                    title='Month-wise Expenses',
+                    labels={'month': 'Month', 'total_amount': 'Total Amount'},
+                    color='total_amount',
+                    color_continuous_scale='Viridis'
+                )
                 
-
+                # Improve layout
+                fig.update_layout(
+                    xaxis_title='Month',
+                    yaxis_title='Total Amount',
+                    margin=dict(l=20, r=20, t=40, b=20)
+                )
+                
+                # Ensure directory exists
+                os.makedirs('./data/finance', exist_ok=True)
+                
+                # Save as static image
+                fig.write_image('./data/finance/monthwise_expenses.png')
+                
+                return {'status': 'success', 'data': monthly_summary.to_dict('records'), 'image_path': ['./data/finance/monthwise_expenses.png']}
+                
             elif tool_response_dict['instructions']["action"] == "view_yearwise_expenses":
                 # Check if expense_log.csv exists
                 if not os.path.exists('./data/finance/expense_log.csv'):
@@ -604,7 +709,7 @@ class Toolbox:
                 # Sort by year
                 yearly_summary = yearly_summary.sort_values(by='year', ascending=False)
                 
-                return {'status': 'success', 'data': yearly_summary.to_dict('records')}
+                return {'status': 'success', 'data': yearly_summary.to_dict('records'), 'image_path': ['./data/finance/yearwise_expenses.png']}
 
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_year":
                 # Check if expense_log.csv exists
