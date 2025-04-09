@@ -46,6 +46,9 @@ class JARVIS:
 
         # Set current active agent to orchestrator initially
         self.current_agent = self.mas.get_current_agent()
+
+        # init data dir
+        os.makedirs('./data', exist_ok=True)
         
     def _load_config(self, config_path: Optional[str]) -> Dict[str, Any]:
         """Load configuration from yaml file"""
