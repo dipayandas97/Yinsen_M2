@@ -35,10 +35,10 @@ class MAS_system_1(object):
         self._init_agents()
 
         # init toolbox
-        self.toolbox = Toolbox()
+        self.toolbox = Toolbox(config=self.config)
 
         # set current agent
-        self.current_agent = self.finance_manager_agent
+        self.current_agent = self.orchestrator_agent
 
     def _init_agents(self):
         """Initialize all LLM agents"""

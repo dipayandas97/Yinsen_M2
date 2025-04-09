@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 from main import JARVIS
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -36,25 +37,20 @@ def process_text(input_data: TextInput):
     # Return just the output
     return {"output": output}
 
-
-
 # Helper function to read file and return list of strings
-def read_file_lines(filepath: str) -> list:
+def read_file(filepath: str) -> list:
     if not os.path.exists(filepath):
-        return ["Error: File not found."]
-    with open(filepath, "r", encoding="utf-8") as f:
-        return [line.strip() for line in f.readlines() if line.strip()]
+        return {'logs': []}
+    # load json file
+    with open(filepath, "r") as f:
+        return json.load(f)
 
+@app.get("/read_notification_logs")
+def read_notification_logs():
+    filepath = os.getenv("LOGS_FILE_PATH", "./data/notification_logs.json")
+    return read_file(filepath)
 
-@app.get("/read_logs")
-def get_file_1():
-    filepath = os.getenv("LOGS_FILE_PATH", "file1.txt")
-    lines = read_file_lines(filepath)
-    return {"data": lines}
-
-
-@app.get("/read_calendar")
-def get_file_2():
-    filepath = os.getenv("CALENDAR_FILE_PATH", "file2.txt")
-    lines = read_file_lines(filepath)
-    return {"data": lines}
+@app.get("/read_calender_logs")
+def read_calender_logs():
+    filepath = os.getenv("CALENDAR_FILE_PATH", "./data/calender_logs.json")
+    return read_file(filepath)

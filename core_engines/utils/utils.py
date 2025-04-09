@@ -1,9 +1,15 @@
 from datetime import datetime
 
-def get_formatted_datetime():
+def get_formatted_datetime(date_only: bool = False,
+                           time_only: bool = False):
     """Get current datetime formatted as MM/DD/YYYY HH:MM"""
     now = datetime.now()
-    return now.strftime("%d/%m/%Y %H:%M")
+    if date_only:   
+        return now.strftime("%d/%m/%Y")
+    elif time_only:
+        return now.strftime("%H:%M")
+    else:
+        return now.strftime("%d/%m/%Y %H:%M")
 
 def _dict_to_string(input_dict):
     """Convert a dictionary to a formatted string"""

@@ -22,6 +22,7 @@ from typing import Optional, Dict, Any
 from pathlib import Path
 import time
 import re
+import json
 
 class JARVIS:
     """
@@ -38,11 +39,11 @@ class JARVIS:
         # Initialize logging and components
         self._init_logging()
         self._init_components()
+        self.calender_logs_path, self.notification_logs_path = self.init_calender_and_notification_logs(self.config['calender_and_logs'])
         
         # Initialize MAS
         self.mas = MAS_system_1(self.config, self.logger, self.text_output)
-        #self._init_agents()
-        
+
         # Set current active agent to orchestrator initially
         self.current_agent = self.mas.get_current_agent()
         
@@ -138,7 +139,26 @@ class JARVIS:
         except Exception as e:
             self.logger.error(f"Error initializing components: {e}")
             raise
-            
+
+    def init_calender_and_notification_logs(self,
+                               calender_logs_path
+                               ):
+        
+        #print(f"DEBUG: Calender logs path: {calender_logs_path}")
+
+        #save the calender_logs and notification_logs to a file
+        if not os.path.exists(calender_logs_path['calender_logs_path']):
+            self.calender_logs = { 'logs': [] }
+            with open(calender_logs_path['calender_logs_path'], "w") as f:
+                json.dump(self.calender_logs, f)
+
+        if not os.path.exists(calender_logs_path['notification_logs_path']):
+            self.notification_logs = { 'logs': [] }
+            with open(calender_logs_path['notification_logs_path'], "w") as f:
+                json.dump(self.notification_logs, f)
+
+        return calender_logs_path['calender_logs_path'], calender_logs_path['notification_logs_path']
+
     def start(self):
         """Start Jarvis"""
         try:

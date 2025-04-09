@@ -8,13 +8,18 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.io as pio
+from external_tools.utils import update_calender_logs, update_notification_logs
+from core_engines.utils.utils import get_formatted_datetime
 
 class Toolbox:
-    def __init__(self):
+    def __init__(self, config):
         self.aci = ACI()
         self.openai = OpenAI()
 
         self.LINKED_ACCOUNT_OWNER_ID = os.getenv("LINKED_ACCOUNT_OWNER_ID", "")
+
+        self.calender_logs_path = config['calender_and_logs']['calender_logs_path']
+        self.notification_logs_path = config['calender_and_logs']['notification_logs_path']
 
     def execute_tool(self, tool_response_dict: dict) -> dict:
         
@@ -62,6 +67,20 @@ class Toolbox:
                     linked_account_owner_id=self.LINKED_ACCOUNT_OWNER_ID,
                 )
                 #print(f"DEBUG: Tool execution result inside toolbox.py: {result}")
+                #print(result.success, result.data['summary'], tool_response_dict['instructions']['start_time'])
+                
+                # Update calender logs if the event is created successfully for TODAY
+                if result.success:
+                    if get_formatted_datetime(date_only=True) == tool_response_dict['instructions']['start_time'].split(' ')[0]:
+                        update_calender_logs(tool_response_dict['instructions']['start_time'].split(' ')[1], \
+                                             result.data['summary'], \
+                                             self.calender_logs_path
+                                            )
+                        #Update notification logs if the event is created successfully for TODAY
+                        update_notification_logs('<b>+ Event created successfully!</b>', \
+                                                 self.notification_logs_path
+                                                )
+                
                 return result
 
             elif tool_response_dict['instructions']["action"] == "view":
@@ -148,7 +167,14 @@ class Toolbox:
                     json.loads(tool_call.function.arguments),
                     linked_account_owner_id=self.LINKED_ACCOUNT_OWNER_ID,
                 )
-                #print(f"DEBUG: Tool execution result inside toolbox.py: {result}")
+                print(f"DEBUG: Tool execution result inside toolbox.py: {result}")
+                
+                #Update notification logs if the email is sent successfully for TODAY
+                if result.success:
+                    update_notification_logs('<b>+ Email sent successfully!</b>', \
+                                             self.notification_logs_path
+                                            )
+                
                 return result
             '''
             elif tool_response_dict['instructions']["action"] == "read":
@@ -279,6 +305,11 @@ class Toolbox:
                 
                 df.to_csv('./data/finance/expense_log.csv', index=False)
                 #print(df)
+
+                #Update notification logs if the expense is logged successfully for TODAY
+                update_notification_logs('<b>+ Expense logged successfully!</b>', \
+                                             self.notification_logs_path
+                                            )
                 return {'status': 'success', 'message': 'Expense logged successfully'}
 
             elif tool_response_dict['instructions']["action"] == "view_all_expenses":
@@ -827,7 +858,6 @@ class Toolbox:
                 
                 return {'status': 'success', 'data': filtered_df.to_dict('records')}
                 
-
         elif tool_response_dict["tool"] == "diary":
             if tool_response_dict['instructions']["action"] == "create_entry":
                 pass

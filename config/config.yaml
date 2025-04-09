@@ -158,3 +158,8 @@ logging:
   level: "INFO"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   file: "logs/chat_history.log"
+
+# Calender and Logs configuration
+calender_and_logs:
+  calender_logs_path: "./data/calender_logs.json"
+  notification_logs_path: "./data/notification_logs.json"
