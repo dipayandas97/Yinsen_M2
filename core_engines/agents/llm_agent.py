@@ -18,8 +18,9 @@ class LLMAgent:
     def __init__(self, agent_name: str, 
                  config: Dict[str, Any], 
                  agent_type: str = "orchestrator",
-                 agent_category: str = "main" # main, helper
-                 ):
+                 agent_category: str = "main", # main, helper
+                 agent_type_to_name_map: Dict[str, str] = None):
+        
         self.logger = logging.getLogger(__name__)
         self.agent_name = agent_name
         self.agent_type = agent_type
@@ -43,7 +44,7 @@ class LLMAgent:
         self.system_instructions = self.general_instructions + \
                                    '\n\nNow, Your name is ' + self.agent_name + '. You are the user\'s ' + self.agent_type + '. \n' + \
                                     self.system_instructions
-        
+        self.agent_type_to_name_map = agent_type_to_name_map
         #print('SYSTEM INSTRUCTIONS:', self.system_instructions)
 
         # Get agent-specific parameters or default to config values
@@ -124,6 +125,13 @@ class LLMAgent:
                          current_agent_category: {self.agent_category}"
             })
         
+        # add agent type to name map
+        messages.append({
+            "role": "system",
+            "content": f"Following is the agent type to name map. Use this when needed: \
+                         {self.agent_type_to_name_map}"
+        })
+
         # Add conversation history (limited to last 10 messages to save tokens)
         for msg in self.conversation_history[-10:]:
             messages.append(msg)

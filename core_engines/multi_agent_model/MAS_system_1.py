@@ -1,7 +1,8 @@
 from core_engines.agents.llm_agent import LLMAgent
 from core_engines.utils.parsers import convert_string_to_dict, convert_tool_response_json_string_to_dict
 
-from core_engines.utils.parsers import convert_to_boolean
+#from core_engines.utils.parsers import convert_to_boolean
+from core_engines.utils.utils import _dict_to_string
 from external_tools.toolbox import Toolbox
 from typing import Dict, Any
 
@@ -23,6 +24,10 @@ class MAS_system_1(object):
         # init text output
         self.text_output = text_output
 
+        # get agent type to name mapping
+        self.agent_type_to_name_map = _dict_to_string(self._get_agent_type_to_name_map())
+        #print(f"DEBUG: Agent type to name mapping: {_dict_to_string(self.agent_type_to_name_map)}")
+    
         # init agents
         self._init_agents()
 
@@ -31,7 +36,7 @@ class MAS_system_1(object):
 
         # set current agent
         self.current_agent = self.finance_manager_agent
-    
+
     def _init_agents(self):
         """Initialize all LLM agents"""
         # Main agents ----------------------------------------------------------------------------------------
@@ -40,7 +45,8 @@ class MAS_system_1(object):
             agent_name=self.config['agent']['orchestrator']['name'],
             config=self.config['agent'],
             agent_type="orchestrator",
-            agent_category="main"
+            agent_category="main",
+            agent_type_to_name_map=self.agent_type_to_name_map
         )
         self.logger.info(f"Orchestrator agent '{self.orchestrator_agent.agent_name}' initialized")
         #print(f"Orchestrator agent '{self.orchestrator_agent.agent_name}' initialized")
@@ -50,7 +56,8 @@ class MAS_system_1(object):
             agent_name=self.config['agent']['finance_manager']['name'],
             config=self.config['agent'],
             agent_type="finance_manager",
-            agent_category="main"
+            agent_category="main",
+            agent_type_to_name_map=self.agent_type_to_name_map
         )
         self.logger.info(f"Finance manager agent '{self.finance_manager_agent.agent_name}' initialized")
         #print(f"Finance manager agent '{self.finance_manager_agent.agent_name}' initialized")
@@ -60,7 +67,8 @@ class MAS_system_1(object):
             agent_name=self.config['agent']['study_manager']['name'],
             config=self.config['agent'],
             agent_type="study_manager",
-            agent_category="main"
+            agent_category="main",
+            agent_type_to_name_map=self.agent_type_to_name_map
         )
         self.logger.info(f"Study manager agent '{self.study_manager_agent.agent_name}' initialized")
         #print(f"Study manager agent '{self.study_manager_agent.agent_name}' initialized")
@@ -70,7 +78,8 @@ class MAS_system_1(object):
             agent_name=self.config['agent']['health_manager']['name'],
             config=self.config['agent'],
             agent_type="health_manager",
-            agent_category="main"
+            agent_category="main",
+            agent_type_to_name_map=self.agent_type_to_name_map
         )
         self.logger.info(f"Health manager agent '{self.health_manager_agent.agent_name}' initialized")
         #print(f"Health manager agent '{self.health_manager_agent.agent_name}' initialized")
@@ -80,7 +89,8 @@ class MAS_system_1(object):
             agent_name=self.config['agent']['helper_agents']['visualizer_agent']['name'],
             config=self.config['agent']['helper_agents'],
             agent_type="visualizer_agent",
-            agent_category="helper"
+            agent_category="helper",
+            agent_type_to_name_map=self.agent_type_to_name_map
         )
         self.logger.info(f"Visualizer agent '{self.visualizer_agent.agent_name}' initialized")
         #print(f"Visualizer agent '{self.visualizer_agent.agent_name}' initialized")
@@ -89,7 +99,8 @@ class MAS_system_1(object):
             agent_name=self.config['agent']['helper_agents']['tool_handler_agent']['name'],
             config=self.config['agent']['helper_agents'],
             agent_type="tool_handler_agent",
-            agent_category="helper"
+            agent_category="helper",
+            agent_type_to_name_map=self.agent_type_to_name_map
         )
         self.logger.info(f"Tool handler agent '{self.tool_handler_agent.agent_name}' initialized")
         #print(f"Tool handler agent '{self.tool_handler_agent.agent_name}' initialized")
@@ -98,10 +109,19 @@ class MAS_system_1(object):
             agent_name=self.config['agent']['helper_agents']['visualizer_agent']['name'],
             config=self.config['agent']['helper_agents'],
             agent_type="visualizer_agent",
-            agent_category="helper"
+            agent_category="helper",
+            agent_type_to_name_map=self.agent_type_to_name_map
         )
         self.logger.info(f"Visualizer agent '{self.visualizer_agent.agent_name}' initialized")
         #print(f"Visualizer agent '{self.visualizer_agent.agent_name}' initialized")
+
+    def _get_agent_type_to_name_map(self):
+        """Get the agent type to name mapping"""
+        agent_type_to_name_map = {}
+        for agent_type, agent_data in self.config['agent'].items():
+            if isinstance(agent_data, dict) and 'name' in agent_data:
+                agent_type_to_name_map[agent_type] = agent_data['name']
+        return agent_type_to_name_map
 
     def get_current_agent(self) -> LLMAgent:
         '''
