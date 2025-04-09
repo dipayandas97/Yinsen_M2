@@ -382,22 +382,32 @@ class Toolbox:
                     color_continuous_scale='Viridis'
                 )
                 
-                # Improve layout
+                # Improve layout with larger text sizes
                 fig.update_layout(
                     xaxis_title='Category',
                     yaxis_title='Total Amount',
                     xaxis={'categoryorder': 'total descending'},
-                    margin=dict(l=20, r=20, t=40, b=20)
+                    margin=dict(l=20, r=20, t=40, b=20),
+                    font=dict(
+                        family="Arial, sans-serif",
+                        size=24,  # Base font size
+                        color="black"
+                    ),
+                    title_font=dict(size=24),  # Title font size
+                    legend_font=dict(size=24)  # Legend font size
                 )
+                
+                # Update axis title font sizes
+                fig.update_xaxes(title_font=dict(size=24))
+                fig.update_yaxes(title_font=dict(size=24))
                 
                 # Ensure directory exists
                 os.makedirs('./data/finance', exist_ok=True)
                 
-                # Save as interactive HTML and static image
-                #pio.write_html(fig, './data/finance/category_wise_expenses.html')
-                fig.write_image('./data/finance/category_wise_expenses.png')
+                # Save as static image with higher resolution and dimensions
+                fig.write_image('./data/finance/category_wise_expenses.png', width=2000, height=800, scale=2)
 
-                return {'status': 'success', 'data': category_summary.to_dict('records')}
+                return {'status': 'success', 'data': category_summary.to_dict('records'), 'image_path': ['./data/finance/category_wise_expenses.png']}
 
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_date":
                 # Check if expense_log.csv exists
@@ -467,20 +477,31 @@ class Toolbox:
                     color_continuous_scale='Viridis'
                 )
                 
-                # Improve layout
+                # Improve layout with larger text sizes
                 fig.update_layout(
                     xaxis_title='Date',
                     yaxis_title='Total Amount',
-                    margin=dict(l=20, r=20, t=40, b=20)
+                    margin=dict(l=20, r=20, t=40, b=20),
+                    font=dict(
+                        family="Arial, sans-serif",
+                        size=24,  # Base font size
+                        color="black"
+                    ),
+                    title_font=dict(size=24),  # Title font size
+                    legend_font=dict(size=24)  # Legend font size
                 )
+                
+                # Update axis title font sizes
+                fig.update_xaxes(title_font=dict(size=24))
+                fig.update_yaxes(title_font=dict(size=24))
                 
                 # Ensure directory exists
                 os.makedirs('./data/finance', exist_ok=True)
                 
-                # Save as static image
-                fig.write_image('./data/finance/daywise_expenses.png')
+                # Save as static image with higher resolution and dimensions
+                fig.write_image('./data/finance/daywise_expenses.png', width=2000, height=800, scale=2)
                 
-                return {'status': 'success', 'data': date_summary.to_dict('records'), 'image_path': ['./data/finance/daywise_expenses.png']}
+                return {'status': 'success', 'data': 'shown in image plot. no data in text format', 'image_path': ['./data/finance/daywise_expenses.png']}
             
             # NA for now --------------------
             elif tool_response_dict['instructions']["action"] == "view_expenses_by_week":
@@ -567,19 +588,30 @@ class Toolbox:
                     hover_data=['year_week']  # Show the year-week string on hover
                 )
                 
-                # Improve layout
+                # Improve layout with larger text sizes
                 fig.update_layout(
                     xaxis_title='Week',
                     yaxis_title='Total Amount',
                     xaxis={'dtick': 1},  # Force integer ticks
-                    margin=dict(l=20, r=20, t=40, b=20)
+                    margin=dict(l=20, r=20, t=40, b=20),
+                    font=dict(
+                        family="Arial, sans-serif",
+                        size=24,  # Base font size
+                        color="black"
+                    ),
+                    title_font=dict(size=24),  # Title font size
+                    legend_font=dict(size=24)  # Legend font size
                 )
+                
+                # Update axis title font sizes
+                fig.update_xaxes(title_font=dict(size=24))
+                fig.update_yaxes(title_font=dict(size=24))
                 
                 # Ensure directory exists
                 os.makedirs('./data/finance', exist_ok=True)
                 
-                # Save as static image
-                fig.write_image('./data/finance/weekwise_expenses.png')
+                # Save as static image with higher resolution and dimensions
+                fig.write_image('./data/finance/weekwise_expenses.png', width=2000, height=800, scale=2)
                 
                 return {'status': 'success', 'data': weekly_summary.to_dict('records'), 'image_path': ['./data/finance/weekwise_expenses.png']}
             #--------------------------------
@@ -667,18 +699,29 @@ class Toolbox:
                     color_continuous_scale='Viridis'
                 )
                 
-                # Improve layout
+                # Improve layout with larger text sizes
                 fig.update_layout(
                     xaxis_title='Month',
                     yaxis_title='Total Amount',
-                    margin=dict(l=20, r=20, t=40, b=20)
+                    margin=dict(l=20, r=20, t=40, b=20),
+                    font=dict(
+                        family="Arial, sans-serif",
+                        size=24,  # Base font size
+                        color="black"
+                    ),
+                    title_font=dict(size=24),  # Title font size
+                    legend_font=dict(size=24)  # Legend font size
                 )
+                
+                # Update axis title font sizes
+                fig.update_xaxes(title_font=dict(size=24))
+                fig.update_yaxes(title_font=dict(size=24))
                 
                 # Ensure directory exists
                 os.makedirs('./data/finance', exist_ok=True)
                 
-                # Save as static image
-                fig.write_image('./data/finance/monthwise_expenses.png')
+                # Save as static image with higher resolution and dimensions
+                fig.write_image('./data/finance/monthwise_expenses.png', width=2000, height=800, scale=2)
                 
                 return {'status': 'success', 'data': monthly_summary.to_dict('records'), 'image_path': ['./data/finance/monthwise_expenses.png']}
                 
@@ -708,6 +751,40 @@ class Toolbox:
                 
                 # Sort by year
                 yearly_summary = yearly_summary.sort_values(by='year', ascending=False)
+                # Create interactive bar chart with plotly
+                fig = px.bar(
+                    yearly_summary, 
+                    x='year', 
+                    y='total_amount',
+                    title='Year-wise Expenses',
+                    labels={'year': 'Year', 'total_amount': 'Total Amount'},
+                    color='total_amount',
+                    color_continuous_scale='Viridis'
+                )
+                
+                # Improve layout with larger text sizes
+                fig.update_layout(
+                    xaxis_title='Year',
+                    yaxis_title='Total Amount',
+                    margin=dict(l=20, r=20, t=40, b=20),
+                    font=dict(
+                        family="Arial, sans-serif",
+                        size=24,  # Base font size
+                        color="black"
+                    ),
+                    title_font=dict(size=24),  # Title font size
+                    legend_font=dict(size=24)  # Legend font size
+                )
+                
+                # Update axis title font sizes
+                fig.update_xaxes(title_font=dict(size=24))
+                fig.update_yaxes(title_font=dict(size=24))
+                
+                # Ensure directory exists
+                os.makedirs('./data/finance', exist_ok=True)
+                
+                # Save as static image with higher resolution and dimensions
+                fig.write_image('./data/finance/yearwise_expenses.png', width=2000, height=800, scale=2)
                 
                 return {'status': 'success', 'data': yearly_summary.to_dict('records'), 'image_path': ['./data/finance/yearwise_expenses.png']}
 
