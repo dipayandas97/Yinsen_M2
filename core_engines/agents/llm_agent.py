@@ -132,10 +132,10 @@ class LLMAgent:
                          {self.agent_type_to_name_map}"
         })
 
-        # Add conversation history (limited to last 10 messages to save tokens)
-        for msg in self.conversation_history[-10:]:
+        # Add conversation history (limited to last 100 messages to save tokens)
+        for msg in self.conversation_history[-100:]:
             messages.append(msg)
-        #print(f"DEBUG: Conversation history: {self.conversation_history[-10:]}")
+        #print(f"DEBUG: Conversation history: {self.conversation_history[-100:]}")
         # Add current user input first
         messages.append({
             "role": "user",
