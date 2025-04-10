@@ -133,7 +133,7 @@ class LLMAgent:
         })
 
         # Add conversation history (limited to last 100 messages to save tokens)
-        for msg in self.conversation_history[-50:]:
+        for msg in self.conversation_history[-10:]:
             messages.append(msg)
         #print(f"DEBUG: Conversation history: {self.conversation_history[-100:]}")
         # Add current user input first
